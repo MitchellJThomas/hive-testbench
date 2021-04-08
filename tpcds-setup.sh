@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function usage {
-	echo "Usage: tpcds-setup.sh scale_factor [temp_directory]"
+	echo "Usage: tpcds-setup.sh --scale <scale_factor> [--dir <temp_directory>] [--no-part] [--external]"
 	exit 1
 }
 
@@ -23,9 +23,41 @@ fi
 DIMS="date_dim time_dim item customer customer_demographics household_demographics customer_address store promotion warehouse ship_mode reason income_band call_center web_page catalog_page web_site"
 FACTS="store_sales store_returns web_sales web_returns catalog_sales catalog_returns inventory"
 
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -D*)
+      APP_JAVA_OPTS="${APP_JAVA_OPTS} ${1}"
+      shift
+      ;;
+    --scale)
+      shift
+      SCALE=$1
+      shift
+      ;;
+    --dir)
+      shift
+      DIR=$1
+      shift
+      ;;
+    --no-part)
+      shift
+      NOT_PARTITIONED="true"
+      ;;
+    --external)
+      shift
+      LEGACY="true"
+      ;;
+    *)
+      PRG_ARGS="${PRG_ARGS} \"$1\""
+      shift
+  esac
+done
+
 # Get the parameters.
-SCALE=$1
-DIR=$2
+#SCALE=$1
+#DIR=$2
+
 if [ "X$BUCKET_DATA" != "X" ]; then
 	BUCKETS=13
 	RETURN_BUCKETS=13
