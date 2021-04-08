@@ -20,6 +20,7 @@ RECORD_FILE=`mktemp`
 
 echo "!record ${RECORD_FILE}" > ${RUN_FILE}
 cat perf_run.sql >> ${RUN_FILE}
+echo "Temp Recording Output: ${RECORD_FILE}"
 
 hive --showHeaders=false --silent=true --outputformat=dsv  --hivevar DB=${DB} -f ${RUN_FILE}
 
