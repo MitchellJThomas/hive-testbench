@@ -23,6 +23,12 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
+if [ "X$NOT_PARTITIONED" != "X" ]; then
+  DB_NAME_PREFIX="tpcds_bin_partitioned_"
+else
+  DB_NAME_PREFIX="tpcds_bin_not_partitioned_"
+fi
+
 # Tables in the TPC-DS schema.
 DIMS="date_dim time_dim item customer customer_demographics household_demographics customer_address store promotion warehouse ship_mode reason income_band call_center web_page catalog_page web_site"
 FACTS="store_sales store_returns web_sales web_returns catalog_sales catalog_returns inventory"
@@ -70,7 +76,8 @@ hadoop fs -chmod -R 777  ${DIR}/${SCALE}
 
 echo "TPC-DS text data generation complete."
 
-HIVE="beeline -n hive -u 'jdbc:hive2://localhost:2181/;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2?tez.queue.name=default' "
+# Assuming we are running the default hive/beeline connection (beeline-site.xml) and as the user
+HIVE="hive "
 
 # Create the text/flat tables as external tables. These will be later be converted to ORCFile.
 echo "Loading text data into external tables."
@@ -91,15 +98,39 @@ echo -e "all: ${DIMS} ${FACTS}" > $LOAD_FILE
 
 i=1
 total=24
-DATABASE=tpcds_bin_partitioned_${FORMAT}_${SCALE}
+
+
+if [ "X$NOT_PARTITIONED" != "X" ]; then
+  if [ "X$LEGACY" != "X" ]; then
+    DATABASE=tpcds_bin_legacy_${FORMAT}_${SCALE}
+    DDL_DIR=bin_not_partitioned
+    LEGACY=true
+  else
+    DATABASE=tpcds_bin_not_partitioned_${FORMAT}_${SCALE}
+    DDL_DIR=bin_not_partitioned
+    LEGACY=false
+  fi
+else
+  if [ "X$LEGACY" != "X" ]; then
+    DATABASE=tpcds_bin_partitioned_legacy_${FORMAT}_${SCALE}
+    DDL_DIR=bin_partitioned
+    LEGACY=true
+  else
+    DATABASE=tpcds_bin_partitioned_${FORMAT}_${SCALE}
+    DDL_DIR=bin_partitioned
+    LEGACY=false
+  fi
+fi
+
+#DATABASE=tpcds_bin_partitioned_${FORMAT}_${SCALE}
 MAX_REDUCERS=2500 # maximum number of useful reducers for any scale 
 REDUCERS=$((test ${SCALE} -gt ${MAX_REDUCERS} && echo ${MAX_REDUCERS}) || echo ${SCALE})
 
 # Populate the smaller tables.
 for t in ${DIMS}
 do
-	COMMAND="$HIVE  -i settings/load-partitioned.sql -f ddl-tpcds/bin_partitioned/${t}.sql \
-	    --hivevar DB=tpcds_bin_partitioned_${FORMAT}_${SCALE} --hivevar SOURCE=tpcds_text_${SCALE} \
+	COMMAND="$HIVE  -i settings/load-partitioned.sql -f ddl-tpcds/${DDL_DIR}/${t}.sql \
+	    --hivevar DB=${DATABASE} --hivevar SOURCE=tpcds_text_${SCALE} \
             --hivevar SCALE=${SCALE} \
 	    --hivevar REDUCERS=${REDUCERS} \
 	    --hivevar FILE=${FORMAT}"
@@ -109,8 +140,8 @@ done
 
 for t in ${FACTS}
 do
-	COMMAND="$HIVE  -i settings/load-partitioned.sql -f ddl-tpcds/bin_partitioned/${t}.sql \
-	    --hivevar DB=tpcds_bin_partitioned_${FORMAT}_${SCALE} \
+	COMMAND="$HIVE  -i settings/load-partitioned.sql -f ddl-tpcds/${DDL_DIR}/${t}.sql \
+	    --hivevar DB=${DATABASE} \
             --hivevar SCALE=${SCALE} \
 	    --hivevar SOURCE=tpcds_text_${SCALE} --hivevar BUCKETS=${BUCKETS} \
 	    --hivevar RETURN_BUCKETS=${RETURN_BUCKETS} --hivevar REDUCERS=${REDUCERS} --hivevar FILE=${FORMAT}"
@@ -122,6 +153,6 @@ make -j 1 -f $LOAD_FILE
 
 
 echo "Loading constraints"
-runcommand "$HIVE -f ddl-tpcds/bin_partitioned/add_constraints.sql --hivevar DB=tpcds_bin_partitioned_${FORMAT}_${SCALE}"
+runcommand "$HIVE -f ddl-tpcds/${DDL_DIR}/add_constraints.sql --hivevar DB=${DATABASE}"
 
 echo "Data loaded into database ${DATABASE}."

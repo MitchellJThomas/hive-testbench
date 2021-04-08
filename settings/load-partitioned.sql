@@ -1,3 +1,5 @@
+set hive.create.as.external.legacy=${LEGACY};
+
 -- set hive.enforce.bucketing=true;
 -- set hive.enforce.sorting=true;
 set hive.exec.dynamic.partition.mode=nonstrict;
