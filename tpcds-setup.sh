@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function usage {
-	echo "Usage: tpcds-setup.sh --scale <scale_factor> [--dir <temp_directory>] [--no-part] [--external]"
+	echo "Usage: tpcds-setup.sh --scale <scale_factor> [--dir <temp_directory>] [--no-part] [--external] [--format <serde_format>]"
 	exit 1
 }
 
@@ -23,6 +23,10 @@ fi
 DIMS="date_dim time_dim item customer customer_demographics household_demographics customer_address store promotion warehouse ship_mode reason income_band call_center web_page catalog_page web_site"
 FACTS="store_sales store_returns web_sales web_returns catalog_sales catalog_returns inventory"
 
+# Defaults
+STRATEGY="partitioned"
+TYPE="managed"
+FORMAT="orc"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -42,11 +46,16 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-part)
       shift
-      NOT_PARTITIONED="true"
+      STRATEGY="not_partitioned"
       ;;
     --external)
       shift
-      LEGACY="true"
+      TYPE="external"
+      ;;
+    --format)
+      shift
+      FORMAT=$1
+      shift
       ;;
     *)
       PRG_ARGS="${PRG_ARGS} \"$1\""
@@ -73,9 +82,7 @@ fi
 if [ X"$SCALE" = "X" ]; then
 	usage
 fi
-if [ X"$DIR" = "X" ]; then
-	DIR=/tmp/tpcds-generate
-fi
+
 if [ $SCALE -eq 1 ]; then
 	echo "Scale factor must be greater than 1"
 	exit 1
@@ -92,12 +99,7 @@ fi
 # Assuming we are running the default hive/beeline connection (beeline-site.xml) and as the user
 HIVE="hive"
 
-# Create the partitioned and bucketed tables.
-if [ "X$FORMAT" = "X" ]; then
-	FORMAT=orc
-fi
-
-LOAD_FILE="load_${FORMAT}_${SCALE}.mk"
+LOAD_FILE="load_${STRATEGY}_${TYPE}_${FORMAT}_${SCALE}.mk"
 SILENCE="2> /dev/null 1> /dev/null" 
 if [ "X$DEBUG_SCRIPT" != "X" ]; then
 	SILENCE=""
