@@ -29,7 +29,7 @@ create table store_returns
 stored as ${FILE};
 
 from ${SOURCE}.store_returns sr
-insert overwrite table store_returns partition (sr_returned_date_sk) 
+insert overwrite table store_returns
 select
         sr.sr_return_time_sk,
         sr.sr_item_sk,
@@ -52,7 +52,7 @@ select
         sr.sr_net_loss,
         sr.sr_returned_date_sk
         where sr.sr_returned_date_sk is not null
-insert overwrite table store_returns partition (sr_returned_date_sk) 
+insert overwrite table store_returns
 select
         sr.sr_return_time_sk,
         sr.sr_item_sk,

@@ -32,7 +32,7 @@ create table store_sales
 stored as ${FILE};
 
 from ${SOURCE}.store_sales ss
-insert overwrite table store_sales partition (ss_sold_date_sk) 
+insert overwrite table store_sales
 select
         ss.ss_sold_time_sk,
         ss.ss_item_sk,
@@ -58,7 +58,7 @@ select
         ss.ss_net_profit,
         ss.ss_sold_date_sk
         where ss.ss_sold_date_sk is not null
-insert overwrite table store_sales partition (ss_sold_date_sk) 
+insert overwrite table store_sales
 select
         ss.ss_sold_time_sk,
         ss.ss_item_sk,

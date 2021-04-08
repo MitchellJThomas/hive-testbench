@@ -43,7 +43,7 @@ create table catalog_sales
 stored as ${FILE};
 
 from ${SOURCE}.catalog_sales cs
-insert overwrite table catalog_sales partition (cs_sold_date_sk) 
+insert overwrite table catalog_sales
 select
         cs.cs_sold_time_sk,
         cs.cs_ship_date_sk,
@@ -80,7 +80,7 @@ select
         cs.cs_net_profit,
         cs.cs_sold_date_sk
         where cs.cs_sold_date_sk is not null
-insert overwrite table catalog_sales partition (cs_sold_date_sk) 
+insert overwrite table catalog_sales
 select
         cs.cs_sold_time_sk,
         cs.cs_ship_date_sk,
