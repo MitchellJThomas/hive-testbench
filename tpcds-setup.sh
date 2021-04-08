@@ -13,20 +13,10 @@ function runcommand {
 	fi
 }
 
-if [ ! -f tpcds-gen/target/tpcds-gen-1.0-SNAPSHOT.jar ]; then
-	echo "Please build the data generator with ./tpcds-build.sh first"
-	exit 1
-fi
 which hive > /dev/null 2>&1
 if [ $? -ne 0 ]; then
 	echo "Script must be run where Hive is installed"
 	exit 1
-fi
-
-if [ "X$NOT_PARTITIONED" != "X" ]; then
-  DB_NAME_PREFIX="tpcds_bin_partitioned_"
-else
-  DB_NAME_PREFIX="tpcds_bin_not_partitioned_"
 fi
 
 # Tables in the TPC-DS schema.
@@ -63,25 +53,12 @@ fi
 hdfs dfs -mkdir -p ${DIR}
 hdfs dfs -ls ${DIR}/${SCALE} > /dev/null
 if [ $? -ne 0 ]; then
-	echo "Generating data at scale factor $SCALE."
-	(cd tpcds-gen; hadoop jar target/*.jar -d ${DIR}/${SCALE}/ -s ${SCALE})
+  echo "Run tpcds-gen.sh script first to build base generated data."
+  exit 1
 fi
-hdfs dfs -ls ${DIR}/${SCALE} > /dev/null
-if [ $? -ne 0 ]; then
-	echo "Data generation failed, exiting."
-	exit 1
-fi
-
-hadoop fs -chmod -R 777  ${DIR}/${SCALE}
-
-echo "TPC-DS text data generation complete."
 
 # Assuming we are running the default hive/beeline connection (beeline-site.xml) and as the user
-HIVE="hive "
-
-# Create the text/flat tables as external tables. These will be later be converted to ORCFile.
-echo "Loading text data into external tables."
-runcommand "$HIVE  -i settings/load-flat.sql -f ddl-tpcds/text/alltables.sql --hivevar DB=tpcds_text_${SCALE} --hivevar LOCATION=${DIR}/${SCALE}"
+HIVE="hive"
 
 # Create the partitioned and bucketed tables.
 if [ "X$FORMAT" = "X" ]; then
@@ -99,10 +76,9 @@ echo -e "all: ${DIMS} ${FACTS}" > $LOAD_FILE
 i=1
 total=24
 
-
 if [ "X$NOT_PARTITIONED" != "X" ]; then
   if [ "X$LEGACY" != "X" ]; then
-    DATABASE=tpcds_bin_legacy_${FORMAT}_${SCALE}
+    DATABASE=tpcds_bin_not_partitioned_legacy_${FORMAT}_${SCALE}
     DDL_DIR=bin_not_partitioned
     LEGACY=true
   else
@@ -121,6 +97,13 @@ else
     LEGACY=false
   fi
 fi
+
+echo -e "Running with... "
+echo -e "      Database: ${DATABASE}"
+echo -e "      DDL_DIR: ${DDL_DIR}"
+echo -e "      LEGACY: ${LEGACY}"
+echo -e "      FORMAT: ${FORMAT}"
+echo -e "      SCALE: ${SCALE}"
 
 #DATABASE=tpcds_bin_partitioned_${FORMAT}_${SCALE}
 MAX_REDUCERS=2500 # maximum number of useful reducers for any scale 
