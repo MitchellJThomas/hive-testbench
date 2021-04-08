@@ -114,34 +114,15 @@ echo -e "all: ${DIMS} ${FACTS}" > $LOAD_FILE
 i=1
 total=24
 
-if [ "X$NOT_PARTITIONED" != "X" ]; then
-  if [ "X$LEGACY" != "X" ]; then
-    DATABASE=tpcds_bin_not_partitioned_legacy_${FORMAT}_${SCALE}
-    DDL_DIR=bin_not_partitioned
-    LEGACY=true
-  else
-    DATABASE=tpcds_bin_not_partitioned_${FORMAT}_${SCALE}
-    DDL_DIR=bin_not_partitioned
-    LEGACY=false
-  fi
-else
-  if [ "X$LEGACY" != "X" ]; then
-    DATABASE=tpcds_bin_partitioned_legacy_${FORMAT}_${SCALE}
-    DDL_DIR=bin_partitioned
-    LEGACY=true
-  else
-    DATABASE=tpcds_bin_partitioned_${FORMAT}_${SCALE}
-    DDL_DIR=bin_partitioned
-    LEGACY=false
-  fi
-fi
+DATABASE=tpcds_bin_${STRATEGY}_${TYPE}_${FORMAT}_${SCALE}
+DDL_DIR=bin_${STRATEGY}
 
 echo -e "Running with... "
 echo -e "      Database: ${DATABASE}"
-echo -e "      DDL_DIR: ${DDL_DIR}"
-echo -e "      LEGACY: ${LEGACY}"
-echo -e "      FORMAT: ${FORMAT}"
-echo -e "      SCALE: ${SCALE}"
+echo -e "      Strategy: ${STRATEGY}"
+echo -e "      Type:     ${TYPE}"
+echo -e "      FORMAT:   ${FORMAT}"
+echo -e "      SCALE:    ${SCALE}"
 
 #DATABASE=tpcds_bin_partitioned_${FORMAT}_${SCALE}
 MAX_REDUCERS=2500 # maximum number of useful reducers for any scale 
@@ -150,7 +131,7 @@ REDUCERS=$((test ${SCALE} -gt ${MAX_REDUCERS} && echo ${MAX_REDUCERS}) || echo $
 # Populate the smaller tables.
 for t in ${DIMS}
 do
-	COMMAND="$HIVE  -i settings/load-partitioned.sql -f ddl-tpcds/${DDL_DIR}/${t}.sql \
+	COMMAND="$HIVE  -i settings/load-partitioned.sql -f ddl-tpcds/bin_${STRATEGY}/${t}.sql \
 	    --hivevar DB=${DATABASE} --hivevar SOURCE=tpcds_text_${SCALE} \
             --hivevar SCALE=${SCALE} \
 	    --hivevar REDUCERS=${REDUCERS} \
@@ -161,7 +142,7 @@ done
 
 for t in ${FACTS}
 do
-	COMMAND="$HIVE  -i settings/load-partitioned.sql -f ddl-tpcds/${DDL_DIR}/${t}.sql \
+	COMMAND="$HIVE  -i settings/load-partitioned.sql -f ddl-tpcds/bin_${STRATEGY/${t}.sql \
 	    --hivevar DB=${DATABASE} \
             --hivevar SCALE=${SCALE} \
 	    --hivevar SOURCE=tpcds_text_${SCALE} --hivevar BUCKETS=${BUCKETS} \
@@ -174,6 +155,6 @@ make -j 1 -f $LOAD_FILE
 
 
 echo "Loading constraints"
-runcommand "$HIVE -f ddl-tpcds/${DDL_DIR}/add_constraints.sql --hivevar DB=${DATABASE}"
+runcommand "$HIVE -f ddl-tpcds/bin_${STRATEGY/add_constraints.sql --hivevar DB=${DATABASE}"
 
 echo "Data loaded into database ${DATABASE}."
