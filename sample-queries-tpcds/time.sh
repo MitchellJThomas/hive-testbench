@@ -1,4 +1,24 @@
-hive --showHeaders=false --silent=true --outputformat=dsv  --hivevar DB=$1 --hivevar OUTPUT_FILE=$2 -f perf_run.sql
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --db)
+      shift
+      DB=$1
+      shift
+      ;;
+    --output)
+      shift
+      OUTPUT=$1
+      shift
+      ;;
+  esac
+done
+
+RUN_FILE=`mktemp`
+
+echo "!record ${OUTPUT};" > ${RUN_FILE}
+cat perf_run.sql >> ${RUN_FILE}
+
+hive --showHeaders=false --silent=true --outputformat=dsv  --hivevar DB=${DB} -f ${RUN_FILE}
 
 
 
