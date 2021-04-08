@@ -1,4 +1,5 @@
-!record ${OUTPUT_FILE}
+!record ${OUTPUT_FILE};
+use ${DB};
 SELECT "MARKER", "query1.sql", "",  unix_timestamp();
 !run query1.sql;
 SELECT "MARKER", "query10.sql", "query1.sql",  unix_timestamp();
