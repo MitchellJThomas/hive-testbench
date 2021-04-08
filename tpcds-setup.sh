@@ -83,6 +83,10 @@ if [ X"$SCALE" = "X" ]; then
 	usage
 fi
 
+if [ X"$DIR" = "X" ]; then
+	DIR=/tmp/tpcds-generate
+fi
+
 if [ $SCALE -eq 1 ]; then
 	echo "Scale factor must be greater than 1"
 	exit 1
