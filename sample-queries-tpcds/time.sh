@@ -24,4 +24,4 @@ echo "Temp Recording Output: ${RECORD_FILE}"
 
 hive --showHeaders=false --silent=true --outputformat=dsv  --hivevar DB=${DB} -f ${RUN_FILE}
 
-grep "\-\-marker\-\-" ${RECORD_FILE} > ${OUTPUT_DIR}/${DB}.marker.dsv
+grep "\-\-marker\-\-" ${RECORD_FILE} >> ${OUTPUT_DIR}/${DB}.marker.dsv
