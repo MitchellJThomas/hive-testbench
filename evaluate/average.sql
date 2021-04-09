@@ -1,5 +1,6 @@
 USE ${DB};
 
+-- Test that we see data.
 SELECT *
 FROM
     tpcds_queries
@@ -8,8 +9,96 @@ where
   or end_query = 'query1.sql'
 limit 10;
 
+-- TOTAL Time (average) across the queries for each dimension.
+WITH
+    CORRELATE AS (
+        SELECT
+            s.db,
+            s.start_query       as query,
+            s.marker            as began,
+            e.marker            as completed,
+            e.marker - s.marker as lapsed_seconds
+        FROM
+            tpcds_queries s
+                INNER JOIN tpcds_queries e
+                           on s.db = e.db
+                               and s.start_query = e.end_query
+                               and s.marker < e.marker
+        WHERE
+                s.start_query != ""
+    ),
+    RANKED_CORRELATED AS (
+        SELECT
+            db,
+            query,
+            began,
+            completed,
+            lapsed_seconds,
+            rank() over (partition by db, query, began order by lapsed_seconds asc) rank
+        FROM
+            CORRELATE
+    ),
+    MATCHED_QUERY AS (
+        SELECT
+            db,
+            query,
+            began,
+            completed,
+            lapsed_seconds
+        FROM
+            RANKED_CORRELATED
+        WHERE
+                rank = 1
+    ),
+    BREAKDOWN AS (
+        SELECT
+            --db,
+            case
+                WHEN size(split(db, "_")) = 6 THEN
+                    case
+                        when split(db, "_")[3] = "managed" then
+                            true
+                        else
+                            false
+                        end
+                ELSE
+                    case
+                        when split(db, "_")[4] = "managed" then
+                            true
+                        else
+                            false
+                        end
+                END                                  MANAGED,
+            case
+                WHEN size(split(db, "_")) = 6 THEN
+                    true
+                ELSE
+                    false
+                END                                  PARTITIONED,
+            split(db, "_")[size(split(db, "_")) - 2] FORMAT,
+            split(db, "_")[size(split(db, "_")) - 1] SCALE,
+            query,
+            AVG(
+                    lapsed_seconds)                  avg_lapsed_seconds
+        FROM
+            MATCHED_QUERY
+        GROUP BY
+            db, query
+    )
+SELECT
+    MANAGED,
+    PARTITIONED,
+    FORMAT,
+    SCALE,
+    sum(avg_lapsed_seconds) TOTAL_SECONDS
+FROM
+    BREAKDOWN
+group by
+    MANAGED, PARTITIONED, FORMAT, SCALE
+ORDER BY TOTAL_SECONDS ASC;
 
 
+-- Detailed breakdown off query averages across dimensions.
 WITH
     CORRELATE AS (
         SELECT
@@ -85,17 +174,6 @@ WITH
         GROUP BY
             db, query
     )
--- SELECT
---     MANAGED,
---     PARTITIONED,
---     FORMAT,
---     SCALE,
---     sum(avg_lapsed_seconds) TOTAL_SECONDS
--- FROM
---     BREAKDOWN
--- group by
---     MANAGED, PARTITIONED, FORMAT, SCALE
--- ORDER BY TOTAL_SECONDS ASC;
 
 SELECT
     QUERY,

@@ -8,6 +8,8 @@ Overview
 
 The hive-testbench is a data generator and set of queries that lets you experiment with Apache Hive at scale. The testbench allows you to experience base Hive performance on large datasets, and gives an easy way to see the impact of Hive tuning parameters and advanced settings.
 
+See [README_tpcds.md](./README_tpcds.md) for mods to the 'tpcds' process that include new `hive` support (only need a hive gateway to run this), multiple dimension testing, and performance reviews/comparisons.
+
 Prerequisites
 =============
 
