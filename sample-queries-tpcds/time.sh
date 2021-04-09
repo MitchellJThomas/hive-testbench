@@ -1,3 +1,8 @@
+APP_DIR=`dirname $0`
+CURR_DIR=`pwd`
+
+cd $APP_DIR
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --db)
