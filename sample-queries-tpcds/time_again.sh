@@ -25,6 +25,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+echo "     Scale: ${SCALE}"
+echo "       Dir: ${OUTPUT_DIR}"
+echo "Iterations: ${ITERATIONS}"
+
 for (( i=1; i<=$ITERATIONS; i++ ))
 do
   echo "Iteration #: ${i}"
