@@ -9,7 +9,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --scale)
       shift
-      DB=$1
+      SCALE=$1
       shift
       ;;
     --dir)
