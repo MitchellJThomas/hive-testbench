@@ -12,8 +12,8 @@ set mapred.map.child.java.opts=-server -Xmx2800m -Djava.net.preferIPv4Stack=true
 set mapred.reduce.child.java.opts=-server -Xmx3800m -Djava.net.preferIPv4Stack=true;
 set mapreduce.map.memory.mb=3072;
 set mapreduce.reduce.memory.mb=4096;
-set hive.llap.memory.oversubscription.max.executors.per.query=8;
-set hive.llap.mapjoin.memory.oversubscribe.factor=0.3;
+-- set hive.llap.memory.oversubscription.max.executors.per.query=8;
+-- set hive.llap.mapjoin.memory.oversubscribe.factor=0.3;
 set hive.auto.convert.join.hashtable.max.entries=-1;
 set hive.optimize.bucketmapjoin=false;
 set hive.convert.join.bucket.mapjoin.tez=false;
