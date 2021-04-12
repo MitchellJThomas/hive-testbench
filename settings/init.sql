@@ -22,3 +22,6 @@ set hive.tez.llap.min.reducer.per.executor=0.33;
 set hive.map.aggr.hash.min.reduction=0.99;
 
 set hive.optimize.sort.dynamic.partition.threshold=0;
+
+-- Turn off Query Results Cache to prevent repeated runs from skew.
+set hive.query.results.cache.enabled=false;
