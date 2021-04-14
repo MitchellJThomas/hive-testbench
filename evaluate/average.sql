@@ -98,7 +98,7 @@ group by
 ORDER BY TOTAL_SECONDS ASC;
 
 
--- Detailed breakdown off query averages across dimensions.
+-- Detailed breakdown of query averages across dimensions.
 WITH
     CORRELATE AS (
         SELECT
