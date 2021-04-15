@@ -79,17 +79,23 @@ if [ "X$DEBUG_SCRIPT" != "X" ]; then
 fi
 
 # Sanity checking.
-if [ X"$SCALE" = "X" ]; then
+if [ "X$SCALE" = "X" ]; then
 	usage
 fi
 
-if [ X"$DIR" = "X" ]; then
+if [ "X$DIR" = "X" ]; then
 	DIR=/tmp/tpcds-generate
 fi
 
 if [ $SCALE -eq 1 ]; then
 	echo "Scale factor must be greater than 1"
 	exit 1
+fi
+
+if [ "$TYPE" = "external" ]; then
+  LEGACY = "true"
+else
+  LEGACY = "false"
 fi
 
 # Do the actual data load.
@@ -133,7 +139,7 @@ for t in ${DIMS}
 do
 	COMMAND="$HIVE -i settings/load-partitioned.sql -f ddl-tpcds/bin_${STRATEGY}/${t}.sql \
 	    --hivevar DB=${DATABASE} --hivevar SOURCE=tpcds_text_${SCALE} \
-            --hivevar SCALE=${SCALE} \
+      --hivevar SCALE=${SCALE} --hivevar LEGACY=${LEGACY} \
 	    --hivevar REDUCERS=${REDUCERS} \
 	    --hivevar FILE=${FORMAT}"
 	echo -e "${t}:\n\t@$COMMAND $SILENCE && echo 'Optimizing table $t ($i/$total).'" >> $LOAD_FILE
@@ -144,7 +150,7 @@ for t in ${FACTS}
 do
 	COMMAND="$HIVE -i settings/load-partitioned.sql -f ddl-tpcds/bin_${STRATEGY}/${t}.sql \
 	    --hivevar DB=${DATABASE} \
-            --hivevar SCALE=${SCALE} \
+      --hivevar SCALE=${SCALE} --hivevar LEGACY=${LEGACY} \
 	    --hivevar SOURCE=tpcds_text_${SCALE} --hivevar BUCKETS=${BUCKETS} \
 	    --hivevar RETURN_BUCKETS=${RETURN_BUCKETS} --hivevar REDUCERS=${REDUCERS} --hivevar FILE=${FORMAT}"
 	echo -e "${t}:\n\t@$COMMAND $SILENCE && echo 'Optimizing table $t ($i/$total).'" >> $LOAD_FILE
