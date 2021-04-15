@@ -93,9 +93,9 @@ if [ $SCALE -eq 1 ]; then
 fi
 
 if [ "$TYPE" = "external" ]; then
-  LEGACY = "true"
+  LEGACY="true"
 else
-  LEGACY = "false"
+  LEGACY="false"
 fi
 
 # Do the actual data load.
