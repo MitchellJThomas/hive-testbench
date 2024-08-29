@@ -82,7 +82,7 @@ for t in ${TABLES}
 do
 	echo "Optimizing table $t ($i/$total)."
 	COMMAND="hive -i settings/load-${SCHEMA_TYPE}.sql -f ddl-tpch/bin_${SCHEMA_TYPE}/${t}.sql \
-	    -hivevar  DB=${DATABASE} \
+	    -hivevar DB=${DATABASE} \
 	    -hivevar SOURCE=tpch_text_${SCALE} -hivevar BUCKETS=${BUCKETS} \
             -hivevar SCALE=${SCALE} -hivevar REDUCERS=${REDUCERS} \
 	    -hivevar FILE=orc"
@@ -94,6 +94,6 @@ do
 	i=`expr $i + 1`
 done
 
-hive -i settings/load-${SCHEMA_TYPE}.sql -f ddl-tpch/bin_${SCHEMA_TYPE}/analyze.sql --database ${DATABASE}; 
+hive -i settings/load-${SCHEMA_TYPE}.sql -f ddl-tpch/bin_${SCHEMA_TYPE}/analyze.sql --database ${DATABASE} -hivevar DB=${DATABASE}; 
 
 echo "Data loaded into database ${DATABASE}."
