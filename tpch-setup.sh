@@ -46,6 +46,14 @@ if [ $SCALE -eq 1 ]; then
 	exit 1
 fi
 
+# Ensure there is a kerbose token
+echo "Check Kerberos token"
+klist
+while [[ $? -eq 1 ]]; do
+    echo "Running kinit to create a Kerberos token"
+    kinit
+done
+
 # Do the actual data load.
 hdfs dfs -mkdir -p ${DIR}
 hdfs dfs -ls ${DIR}/${SCALE}/lineitem > /dev/null
